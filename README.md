@@ -22,12 +22,11 @@ This is the frontend build of a fullstack **Netflix Clone** — built with **Rea
 
 ## 🧰 Tech Stack
 
-- React.js  
-- Zustand  
+- React.js   
 - Tailwind CSS  
 - TMDB API  
 - Vite  
-- (Upcoming: Node.js, Express, MongoDB, OpenAI)  
+- (Upcoming: Node.js, Express, MongoDB, Zustand, Gemini AI)  
 
 
 ## 📦 Getting Started
