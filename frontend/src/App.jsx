@@ -17,7 +17,7 @@ const App = () => {
   }, [fetchUser])
 
   if(fetchingUser){
-    return <p>Loading...</p>
+    return <p className="text-[#e50914]">Loading...</p>
   }
   return (
     <div>
