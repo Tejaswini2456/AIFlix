@@ -19,7 +19,7 @@ export const useAuthStore = create((set) => ({
     set({ isLoading: true, message: null });
 
     try {
-      const response = await axios.post(`${API_URL}/api/signup`, {
+      const response = await axios.post(`${API_URL}/signup`, {
         username,
         email,
         password,
