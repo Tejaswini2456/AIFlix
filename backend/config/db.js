@@ -1,10 +1,14 @@
 import mongoose from "mongoose";
 
 export async function connectToDB() {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+
   if (!process.env.MONGO_URI) {
     console.warn("-------------------------------------------------------");
-    console.warn("⚠️  MONGO_URI is missing in backend/.env!");
-    console.warn("⚠️  Please set MONGO_URI in backend/.env to use Auth/Database features.");
+    console.warn("⚠️  MONGO_URI is missing in environment variables!");
+    console.warn("⚠️  Please set MONGO_URI in your Vercel Environment Variables.");
     console.warn("-------------------------------------------------------");
     return;
   }

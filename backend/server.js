@@ -19,13 +19,23 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL || true,
     credentials: true,
   })
 );
 
+// Ensure DB connection for every request in serverless environment
+app.use(async (req, res, next) => {
+  await connectToDB();
+  next();
+});
+
 app.get("/", (req, res) => {
   res.send("AIFlix API is Running");
+});
+
+app.get("/api", (req, res) => {
+  res.send("AIFlix API Endpoint Active");
 });
 
 app.post("/api/signup", async (req, res) => {
@@ -158,7 +168,11 @@ app.post("/api/logout", async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-app.listen(PORT, () => {
-  connectToDB();
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    connectToDB();
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
