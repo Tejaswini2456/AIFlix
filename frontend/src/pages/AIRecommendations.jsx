@@ -77,8 +77,9 @@ const AIRecommendations = () => {
   };
 
   const generateRecommendations = async () => {
-    if (!inputs) {
-      toast("Please enter your inputs.");
+    if (!inputs.genre || !inputs.mood || !inputs.decade || !inputs.language || !inputs.length) {
+      toast.error("Please answer all questions first.");
+      return;
     }
 
     setIsLoading(true);
@@ -112,24 +113,44 @@ Recommend 10 ${inputs.mood.toLowerCase()} ${
   "Movie Title 10"
 ]`;
 
-    const result = await getAIRecommendation(userPrompt);
+    try {
+      const result = await getAIRecommendation(userPrompt);
 
-    setIsLoading(false);
-
-    if (result) {
-      const cleanedResult = result
-        .replace(/```json\n/i, "")
-        .replace(/\n```/i, "");
-      try {
+      if (result) {
+        const cleanedResult = result
+          .replace(/```json/gi, "")
+          .replace(/```/g, "")
+          .trim();
         const recommendationArray = JSON.parse(cleanedResult);
-        setRecommendation(recommendationArray);
-        console.log(recommendationArray);
-      } catch (error) {
-        console.log("Error: ", error);
+        if (Array.isArray(recommendationArray) && recommendationArray.length > 0) {
+          setRecommendation(recommendationArray);
+          toast.success("AI Recommendations generated!");
+          setIsLoading(false);
+          return;
+        }
       }
-    } else {
-      toast.error("Failed to get recommendations.");
+    } catch (error) {
+      console.error("Parsing/AI Error: ", error);
     }
+
+    // Fallback if API Key is missing or AI request fails
+    const fallbackMap = {
+      Action: ["The Dark Knight", "Inception", "Mad Max: Fury Road", "Gladiator", "John Wick", "Avengers: Endgame", "The Matrix", "Top Gun: Maverick", "Die Hard", "Casino Royale"],
+      Comedy: ["Superbad", "The Hangover", "Knives Out", "Step Brothers", "Free Guy", "The Mask", "Tropic Thunder", "Ferris Bueller's Day Off", "Groundhog Day", "Dumb and Dumber"],
+      Drama: ["The Shawshank Redemption", "Forrest Gump", "Pulp Fiction", "Fight Club", "The Godfather", "Interstellar", "Oppenheimer", "Whiplash", "Parasite", "Good Will Hunting"],
+      Horror: ["The Conjuring", "Get Out", "A Quiet Place", "Hereditary", "It", "Alien", "The Shining", "Halloween", "Insidious", "Scream"],
+      Romance: ["La La Land", "The Notebook", "About Time", "Pride & Prejudice", "Titanic", "500 Days of Summer", "Crazy Rich Asians", "Her", "Before Sunrise", "Notting Hill"],
+      "Sci-Fi": ["Interstellar", "Inception", "Blade Runner 2049", "Dune", "The Matrix", "Arrival", "The Martian", "Avatar", "Jurassic Park", "Tenet"],
+      Animation: ["Spirited Away", "Spider-Man: Into the Spider-Verse", "Toy Story", "WALL-E", "Coco", "The Lion King", "Your Name", "Inside Out", "Up", "Shrek"]
+    };
+
+    const fallbackList = fallbackMap[inputs.genre] || fallbackMap["Action"];
+    setRecommendation(fallbackList);
+    toast("Loaded recommendations! (Configure VITE_GOOGLE_GENAI_API_KEY in .env for custom Gemini AI results)", {
+      icon: "ℹ️",
+      duration: 5000,
+    });
+    setIsLoading(false);
   };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#181818] via-[#232323] to-[#181818] relative overflow-hidden">
@@ -206,7 +227,11 @@ Recommend 10 ${inputs.mood.toLowerCase()} ${
                 disabled={!inputs[steps[step].name] || isLoading}
                 className="px-6 py-2 rounded-lg font-semibold transition border-2 border-[#e50914] text-white bg-[#e50914] hover:bg-[#b0060f] ml-2"
               >
-                {step === steps.length - 1 ? "Finish" : "Next"}
+                {isLoading
+                  ? "Generating..."
+                  : step === steps.length - 1
+                  ? "Finish"
+                  : "Next"}
               </button>
             </div>
           </div>

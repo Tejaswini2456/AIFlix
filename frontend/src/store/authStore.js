@@ -3,7 +3,7 @@ import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
-const API_URL = "https://aiflix-ab8d.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const useAuthStore = create((set) => ({
   // initial states
@@ -16,7 +16,7 @@ export const useAuthStore = create((set) => ({
   // functions
 
   signup: async (username, email, password) => {
-    set({ isLoading: true, message: null });
+    set({ isLoading: true, message: null, error: null });
 
     try {
       const response = await axios.post(`${API_URL}/signup`, {
@@ -26,13 +26,15 @@ export const useAuthStore = create((set) => ({
       });
 
       set({ user: response.data.user, isLoading: false });
+      return response.data;
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error Signing up";
       set({
         isLoading: false,
-        error: error.response.data.message || "Error Signing up",
+        error: errorMessage,
       });
 
-      throw error;
+      throw new Error(errorMessage);
     }
   },
 
@@ -55,12 +57,13 @@ export const useAuthStore = create((set) => ({
 
       return { user, message };
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error logging in";
       set({
         isLoading: false,
-        error: error.response.data.message || "Error logging in",
+        error: errorMessage,
       });
 
-      throw error;
+      throw new Error(errorMessage);
     }
   },
 
@@ -76,8 +79,6 @@ export const useAuthStore = create((set) => ({
         error: null,
         user: null,
       });
-
-      throw error;
     }
   },
 
@@ -96,12 +97,14 @@ export const useAuthStore = create((set) => ({
 
       return { message };
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error logging out";
       set({
         isLoading: false,
-        error: error.response.data.message || "Error logging out",
+        error: errorMessage,
       });
 
-      throw error;
+      throw new Error(errorMessage);
     }
   },
 }));
+

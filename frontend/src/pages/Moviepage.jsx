@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { Play, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 
@@ -7,6 +7,7 @@ const Moviepage = () => {
   const [movie, setMovie] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [trailerKey, setTrailerKey] = useState(null);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
 
   const options = {
     method: "GET",
@@ -38,8 +39,8 @@ const Moviepage = () => {
       .then((res) => res.json())
       .then((res) => {
         const trailer = res.results?.find(
-          (vid) => vid.site === "YouTube" && vid.type === "Trailer"
-        );
+          (vid) => vid.site === "YouTube" && (vid.type === "Trailer" || vid.type === "Teaser")
+        ) || res.results?.[0];
         setTrailerKey(trailer?.key || null);
       })
       .catch((err) => console.error(err));
@@ -80,23 +81,54 @@ const Moviepage = () => {
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               {movie.genres.map((genre) => (
-                <span className="bg-gray-800 px-3 py-1 rounded-full text-sm">
+                <span key={genre.id} className="bg-gray-800 px-3 py-1 rounded-full text-sm">
                   {genre.name}
                 </span>
               ))}
             </div>
             <p className="max-w-2xl text-gray-200">{movie.overview}</p>
-            <Link
-              to={`https://www.youtube.com/watch?v=${trailerKey}`}
-              target="_blank"
+            
+            <button
+              onClick={() => setShowTrailerModal(true)}
+              className="flex justify-center items-center bg-[#e50914] text-white py-3 px-6 rounded-full cursor-pointer text-sm md:text-base mt-2 md:mt-4 hover:bg-[#b0060f] transition font-semibold"
             >
-              <button className="flex justify-center items-center bg-[#e50914]  text-white py-3 px-4 rounded-full cursor-pointer text-sm md:text-base mt-2 md:mt-4">
-                <Play className="mr-2 w-4 h-5 md:w-5 md:h-5" /> Watch Now
-              </button>
-            </Link>
+              <Play className="mr-2 w-4 h-5 md:w-5 md:h-5 fill-current" /> Watch Trailer
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Embedded Trailer Modal */}
+      {showTrailerModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-4xl bg-[#181818] rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
+            <div className="flex justify-between items-center px-4 py-3 bg-[#232323] border-b border-gray-800">
+              <h3 className="text-white font-semibold text-lg">{movie.title} — Official Video / Trailer</h3>
+              <button
+                onClick={() => setShowTrailerModal(false)}
+                className="text-gray-400 hover:text-white transition p-1"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="relative pt-[56.25%] bg-black">
+              {trailerKey ? (
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                  title={movie.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                  No official video trailer found for this movie.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="p-8">
         <h2 className="text-2xl font-semibold mb-4">Details</h2>

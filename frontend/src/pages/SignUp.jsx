@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../store/authStore";
+import toast from "react-hot-toast";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -13,10 +14,11 @@ const SignUp = () => {
     e.preventDefault();
 
     try {
-      await signup(username, email, password);
+      const res = await signup(username, email, password);
+      toast.success(res?.message || "Account created successfully!");
       navigate("/");
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
     }
   };
 

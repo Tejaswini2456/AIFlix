@@ -17,10 +17,15 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({origin: process.env.CLIENT_URL, credentials: true}))
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.get("/", (req, res) => {
-  res.send("Subscribe To My Channel!");
+  res.send("AIFlix API is Running");
 });
 
 app.post("/api/signup", async (req, res) => {
@@ -28,13 +33,13 @@ app.post("/api/signup", async (req, res) => {
 
   try {
     if (!username || !email || !password) {
-      throw new Error("All fields are required!");
+      return res.status(400).json({ message: "All fields are required!" });
     }
 
     const emailExists = await User.findOne({ email });
 
     if (emailExists) {
-      return res.status(400).json({ message: "User already exists." });
+      return res.status(400).json({ message: "User with this email already exists." });
     }
 
     const usernameExists = await User.findOne({ username });
@@ -53,24 +58,24 @@ app.post("/api/signup", async (req, res) => {
       password: hashedPassword,
     });
 
-    // JWT
-
     if (userDoc) {
-      // jwt.sign(payload, secret, options)
-      const token = jwt.sign({ id: userDoc._id }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ id: userDoc._id }, process.env.JWT_SECRET || "default_jwt_secret", {
         expiresIn: "7d",
       });
 
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       });
     }
 
+    const userObj = userDoc.toObject();
+    delete userObj.password;
+
     return res
       .status(200)
-      .json({ user: userDoc, message: "User created successfully." });
+      .json({ user: userObj, message: "User created successfully." });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -85,7 +90,7 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    const isPasswordValid = await bcryptjs.compareSync(
+    const isPasswordValid = await bcryptjs.compare(
       password,
       userDoc.password
     );
@@ -93,23 +98,24 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    // JWT
     if (userDoc) {
-      // jwt.sign(payload, secret, options)
-      const token = jwt.sign({ id: userDoc._id }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ id: userDoc._id }, process.env.JWT_SECRET || "default_jwt_secret", {
         expiresIn: "7d",
       });
 
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       });
     }
 
+    const userObj = userDoc.toObject();
+    delete userObj.password;
+
     return res
       .status(200)
-      .json({ user: userDoc, message: "Logged in successfully." });
+      .json({ user: userObj, message: "Logged in successfully." });
   } catch (error) {
     console.log("Error Logging in: ", error.message);
     res.status(400).json({ message: error.message });
@@ -124,7 +130,7 @@ app.get("/api/fetch-user", async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_jwt_secret");
 
     if (!decoded) {
       return res.status(401).json({ message: "Invalid token" });
@@ -144,7 +150,11 @@ app.get("/api/fetch-user", async (req, res) => {
 });
 
 app.post("/api/logout", async (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
   res.status(200).json({ message: "Logged out successfully" });
 });
 
