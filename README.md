@@ -1,5 +1,9 @@
 # 🎨 AIFlix - Fullstack Netflix Clone with AI Movie Recommendations
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://aiflix-omega.vercel.app)
+
+🌐 **Live Demo Application**: [https://aiflix-omega.vercel.app](https://aiflix-omega.vercel.app)
+
 A fully functional, modern **Netflix Clone** built with the **MERN stack** (MongoDB, Express, React, Node.js). It features **AI-powered movie recommendations** using **Gemini AI**, complete **user authentication**, and a clean, responsive UI powered by real movie data from the **TMDB API**.
 
 Developed by **Tejaswini** ([@Tejaswini2456](https://github.com/Tejaswini2456)).
